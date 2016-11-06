@@ -63,7 +63,8 @@ def state_transitions(current, target):
 
 # External and internal states
 e_state = {
-    "state": "STOPPED"
+    "state": "STOPPED",
+    "pressure": 0
 }
 i_state = {
     "target_state": "STOPPED"
@@ -76,9 +77,21 @@ def logic_loop(client):
         if new_state:
             e_state["state"] = new_state
 
+    # Handle simulation
+    # These rates are totally arbitrary
+    if e_state["state"] == "RUNNING":
+        if e_state["pressure"] < 150:
+            e_state["pressure"] += 25
+
+    if e_state["pressure"] > 0:
+        e_state["pressure"] -= 10
+
+    # Clamp from 0 to 150
+    e_state["pressure"] = max(0, min(e_state["pressure"], 150))
+
     # Send status updates
     client.publish(SUBSYSTEM, json.dumps(e_state))
-    time.sleep(1);
+    time.sleep(0.1);
 
 # Handle actions
 def on_message_set(mosq, obj, msg):
